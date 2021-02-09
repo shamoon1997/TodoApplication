@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Todo App</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+<body>
+  <div id="app">
+  <div class="form-group">
+    <label for="usr">New ToDo:</label>
+    <input type="text" class="form-control" id="usr" v-model="todo" placeholder="Enter new Todo ">
+  </div>
+  <button type="button" class="btn btn-primary"  v-on:click="Addtodo">Add</button>
+  <ul v-for="todo in todos" class="list-group">
+    <li class="list-group-item">{{todo.text}} <button type="button" class="btn btn-danger" style="float:right;" v-on:click="Removetodo(todo.id)">Delete</button> </li>
+  </ul>
+</div>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
+<script>
+  var app=new Vue({
+    el: '#app',
+    async mounted(){
+     fetch('http://localhost:3000/todos',{
+        method : 'GET'
+      }).then((response)=>{
+        if (response) {
+          return response.json()
+        }
+      }).then((data)=>{
+        this.todos=data
+      })
+      .catch((error)=>{
+        console.log('Looks there is an error');
+      })
+    },
+    data:{
+      todos: null,
+      todo:null
+    },
+    methods:{
+      Addtodo: function(event) {
+      fetch('http://localhost:3000/todos',{
+        method:'POST',
+        body: JSON.stringify({
+          text:this.todo
+        }),
+        headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      } 
+      }).then((response)=>{
+        console.log(response.status);
+      })
+      this.todos.push({id:null, text:this.todo})
+      console.log(this.todos);
+      this.todo=""
+      },
+      Removetodo: async function(comingtodoid){
+        let checker=false
+       await fetch(`http://localhost:3000/todos/${comingtodoid}`,{
+          method:'DELETE',
+          headers:{
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        }).then((response)=>{
+          if (response.status===201) {
+            checker=true
+            console.log(response.status);
+          }
+        })
+        if (checker===true) {
+        this.todos=this.todos.filter(function(el){ return el.id!=comingtodoid})
+        console.log(this.todos); 
+        }
+      }  
+
+    }
+  })
+</script>
+</html>
